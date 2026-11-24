@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Diesel-Viertaktmotor – Animation</title>
+<style>
+:root{--bg:#f4f5f7;--fg:#1b1f24;--mut:#5b6573;--line:#3a4350;--metal:#c9d0d9;--card:#fff;--acc:#d9480f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171b;--fg:#eceff3;--mut:#9aa5b3;--line:#aab4c2;--metal:#4a5360;--card:#1d2127;--acc:#ff8a4c;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14171b;--fg:#eceff3;--mut:#9aa5b3;--line:#aab4c2;--metal:#4a5360;--card:#1d2127;--acc:#ff8a4c;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;align-items:center;padding:12px}
+h1{font-size:18px;margin:4px 0 8px;text-align:center}
+#wrap{width:100%;max-width:420px;background:var(--card);border-radius:14px;padding:8px}
+canvas{width:100%;height:auto;display:block}
+#phase{text-align:center;font-weight:700;font-size:20px;color:var(--acc);margin:6px 0 2px}
+#desc{text-align:center;font-size:14px;color:var(--mut);min-height:40px;padding:0 8px}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:8px 0}
+.steps div{font-size:11px;text-align:center;padding:6px 2px;border-radius:8px;background:var(--bg);color:var(--mut)}
+.steps div.on{background:var(--acc);color:#fff;font-weight:700}
+.ctl{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:6px}
+button{background:var(--acc);color:#fff;border:0;border-radius:10px;padding:10px 18px;font-size:15px;font-weight:600}
+input[type=range]{flex:1;max-width:160px}
+label{font-size:13px;color:var(--mut)}
+</style>
+</head>
+<body>
+<h1>Diesel-Viertaktmotor</h1>
+<div id="wrap">
+<canvas id="c" width="360" height="460"></canvas>
+<div id="phase"></div>
+<div id="desc"></div>
+<div class="steps"><div>1 Ansaugen</div><div>2 Verdichten</div><div>3 Arbeiten</div><div>4 Ausstoßen</div></div>
+<div class="ctl"><button id="pp">Pause</button><label>Tempo <input id="sp" type="range" min="0.2" max="3" step="0.1" value="1"></label></div>
+</div>
+<script>
+const cv=document.getElementById('c'),g=cv.getContext('2d');
+const CX=180,CY=400,R=40,L=110,HEAD=205,X0=130,X1=230;
+let th=0,run=true,spd=1,last=0;
+const names=['Ansaugen','Verdichten','Arbeiten','Ausstoßen'];
+const descs=['Kolben fährt nach unten, das Einlassventil ist offen: reine Luft strömt ein (keine Kraftstoffbeimischung).',
+'Beide Ventile geschlossen. Der Kolben verdichtet die Luft stark (ca. 16–22:1) – sie erhitzt sich auf über 600 °C.',
+'Kurz vor OT spritzt die Düse Diesel ein, der entzündet sich von selbst. Das Gas expandiert und drückt den Kolben nach unten.',
+'Das Auslassventil öffnet, der Kolben schiebt die Abgase nach oben aus dem Zylinder.'];
+const col=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function mix(a,b,t){return a.map((v,i)=>Math.round(v+(b[i]-v)*t))}
+function draw(){
+ const line=col('--line'),metal=col('--metal');
+ g.clearRect(0,0,360,460);
+ const a=th*Math.PI/180,s=Math.sin(a),c=Math.cos(a);
+ const cpx=CX+R*s,cpy=CY-R*c;
+ const py=CY-R*c-Math.sqrt(L*L-R*R*s*s);
+ const top=py-25;
+ const ph=Math.floor(th/180);
+ const iOpen=th<190?Math.sin(Math.min(th,180)/190*Math.PI):0;
+ const eOpen=th>=530?Math.sin((th-530)/190*Math.PI):0;
+ let rgb;
+ if(ph===0)rgb=[120,180,255];
+ else if(ph===1)rgb=mix([120,180,255],[255,150,60],(th-180)/180);
+ else if(ph===2){const t=(th-360)/180;rgb=mix([255,230,90],[200,90,50],Math.min(1,t*1.4))}
+ else rgb=mix([150,150,150],[110,110,110],(th-540)/180);
+ g.fillStyle=`rgba(${rgb},${ph===0?0.35:0.55})`;
+ g.fillRect(X0,HEAD,X1-X0,top-HEAD);
+ if(th>=350&&th<470){const k=th<360?(th-350)/10:1-(th-360)/110;g.fillStyle=`rgba(255,200,60,${Math.max(0,k)*0.8})`;g.fillRect(X0+4,HEAD,X1-X0-8,Math.max(0,top-HEAD))}
+ if(th>=340&&th<372){g.strokeStyle='#ffb02e';g.lineWidth=2;for(let i=-2;i<=2;i++){g.beginPath();g.moveTo(CX,HEAD+2);g.lineTo(CX+i*10,HEAD+22+Math.abs(i)*2);g.stroke()}}
+ g.strokeStyle=line;g.lineWidth=4;g.beginPath();g.moveTo(X0,HEAD);g.lineTo(X0,345);g.moveTo(X1,HEAD);g.lineTo(X1,345);g.stroke();
+ g.fillStyle=metal;
+ g.fillRect(X0-6,HEAD-22,X1-X0+12,22);
+ g.fillStyle='rgba(120,180,255,0.5)';g.fillRect(100,HEAD-70,30,48);g.fillRect(100,HEAD-70,30,6);
+ g.fillStyle='rgba(140,140,140,.55)';g.fillRect(230,HEAD-70,30,48);
+ g.fillStyle=col('--fg');g.font='11px system-ui';g.textAlign='center';
+ g.fillText('Einlass',115,HEAD-76);g.fillText('Auslass',245,HEAD-76);g.fillText('Einspritzdüse',CX,HEAD-30);
+ if(ph===0){arrow(115,HEAD-60,HEAD-5,'#4aa3ff')}
+ if(ph===3){arrow(245,HEAD-5,HEAD-60,'#999')}
+ valve(150,iOpen);valve(210,eOpen);
+ g.fillStyle=line;g.fillRect(CX-5,HEAD-22,10,22);
+ g.strokeStyle=line;g.lineWidth=8;g.lineCap='round';g.beginPath();g.moveTo(CX,py);g.lineTo(cpx,cpy);g.stroke();
+ g.lineWidth=10;g.beginPath();g.moveTo(CX,CY);g.lineTo(cpx,cpy);g.stroke();
+ g.fillStyle=line;g.beginPath();g.arc(CX-R*s*0.9,CY+R*c*0.9,15,0,7);g.fill();
+ g.fillStyle=metal;g.beginPath();g.arc(CX,CY,12,0,7);g.fill();g.strokeStyle=line;g.lineWidth=3;g.stroke();
+ g.fillStyle=line;g.beginPath();g.arc(cpx,cpy,6,0,7);g.fill();
+ g.fillStyle=metal;g.fillRect(X0+3,top,X1-X0-6,40);g.strokeStyle=line;g.lineWidth=2;g.strokeRect(X0+3,top,X1-X0-6,40);
+ for(let i=1;i<=3;i++){g.beginPath();g.moveTo(X0+3,top+i*6);g.lineTo(X1-3,top+i*6);g.stroke()}
+ g.fillStyle=line;g.beginPath();g.arc(CX,py,5,0,7);g.fill();
+ document.getElementById('phase').textContent=(ph+1)+'. Takt: '+names[ph];
+ document.getElementById('desc').textContent=descs[ph];
+ document.querySelectorAll('.steps div').forEach((d,i)=>d.classList.toggle('on',i===ph));
+}
+function valve(x,o){
+ const y=HEAD-o*10;
+ g.strokeStyle=col('--line');g.lineWidth=3;g.beginPath();g.moveTo(x,y-26);g.lineTo(x,y);g.stroke();
+ g.fillStyle=col('--line');g.fillRect(x-11,y-3,22,5);
+}
+function arrow(x,y1,y2,c){g.strokeStyle=c;g.fillStyle=c;g.lineWidth=3;g.beginPath();g.moveTo(x,y1);g.lineTo(x,y2);g.stroke();const d=y2>y1?-1:1;g.beginPath();g.moveTo(x,y2);g.lineTo(x-6,y2+d*9);g.lineTo(x+6,y2+d*9);g.fill()}
+function loop(t){
+ if(run){const dt=Math.min(50,t-last);th=(th+dt*0.09*spd)%720}
+ last=t;draw();requestAnimationFrame(loop)
+}
+document.getElementById('pp').onclick=e=>{run=!run;e.target.textContent=run?'Pause':'Weiter'};
+document.getElementById('sp').oninput=e=>spd=+e.target.value;
+requestAnimationFrame(t=>{last=t;loop(t)});
+</script>
+</body>
+</html>
