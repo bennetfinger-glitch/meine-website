@@ -30,14 +30,14 @@ label{font-size:13px;color:var(--mut)}
 <canvas id="c" width="360" height="460"></canvas>
 <div id="phase"></div>
 <div id="desc"></div>
-<div class="steps"><div>1 Ansaugen</div><div>2 Verdichten</div><div>3 Arbeiten</div><div>4 Ausstoßen</div></div>
+<div class="steps"><div>1 Ansaugen</div><div>2 Verdichten</div><div>3 Verbrennung</div><div>4 Ausstoßen</div></div>
 <div class="ctl"><button id="pp">Pause</button><label>Tempo <input id="sp" type="range" min="0.2" max="3" step="0.1" value="1"></label></div>
 </div>
 <script>
 const cv=document.getElementById('c'),g=cv.getContext('2d');
 const CX=180,CY=400,R=40,L=110,HEAD=205,X0=130,X1=230;
 let th=0,run=true,spd=1,last=0;
-const names=['Ansaugen','Verdichten','Arbeiten','Ausstoßen'];
+const names=['Ansaugen','Verdichten','Verbrennung','Ausstoßen'];
 const descs=['Kolben fährt nach unten, das Einlassventil ist offen: reine Luft strömt ein (keine Kraftstoffbeimischung).',
 'Beide Ventile geschlossen. Der Kolben verdichtet die Luft stark – sie erhitzt sich auf über 600 °C.',
 'Kurz vor OT spritzt die Düse Diesel ein, der entzündet sich von selbst. Das Gas expandiert und drückt den Kolben nach unten.',
